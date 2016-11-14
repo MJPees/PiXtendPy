@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from PiXTend import *
+from piXtend import *
 
 i = 0
 digitalInput = 255
