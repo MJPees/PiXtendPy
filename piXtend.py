@@ -20,6 +20,9 @@
 
 import time
 import wiringpi
+import serial
+Serial = serial.Serial()
+
 byInitFlag = 0
 
 OutputDataDAC = {'wAOut0' : 0, 'wAOut1' : 0}
@@ -72,12 +75,11 @@ InputData['rHumid2'] = 0
 InputData['rHumid3'] = 0
 
 
-def getHwVersion():
+def Get_Hw_Version():
   version = Spi_Get_uC_Version()
   versionH = version >> 8
   versionL = version & 0xFF
-  print("%s.%s" % (versionH, versionL))
-  return(version)
+  return("V%s.%s" % (versionH, versionL))
 
 
 def limit(value, min_value = 0, max_value = 255):
@@ -532,3 +534,34 @@ def Spi_Get_Gpio():
   wiringpi.wiringPiSPIDataRW(spi_device, byte_string)
   time.sleep(0.01)
   return(byte_string[3])
+
+# Serial communication #######################################################
+# to disconnect the serialport from the console following steps are nessesary:
+# 1. remove "console=ttyAMA0,115200" from /boot/cmdline.txt
+# 2. sudo systemctl disable serial-getty@ttyAMA0.service
+
+def SerialPort_Open(port='/dev/ttyAMA0',baudrate=9600):
+  Serial.port = port
+  Serial.baudrate = baudrate
+  Serial.bytesize = serial.EIGHTBITS #number of bits per bytes
+  Serial.parity = serial.PARITY_NONE #set parity check: no parity
+  Serial.stopbits = serial.STOPBITS_ONE #number of stop bits
+  Serial.timeout = 1            #non-block read
+  Serial.xonxoff = False     #disable software flow control
+  Serial.rtscts = False     #disable hardware (RTS/CTS) flow control
+  Serial.dsrdtr = False       #disable hardware (DSR/DTR) flow control
+  Serial.writeTimeout = 1     #timeout for write
+  Serial.open()
+    
+
+def SerialPort_Close():
+  Serial.close()
+
+
+def SerialPort_Write_Text(text):
+  Serial.write(bytes(text,'utf-8'))
+
+
+def SerialPort_Read_Text():
+  return Serial.readline().decode('utf-8')
+    
